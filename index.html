@@ -1,125 +1,165 @@
 <script>
-  // --- Selección de Elementos del DOM ---
-  // Selecciona el elemento de vídeo principal.
+  // ================================
+  // ELEMENTOS
+  // ================================
   const videoElement = document.querySelector("#video");
-  // Selecciona el elemento donde se mostrarán los mensajes al usuario.
   const messageElement = document.querySelector("#mensaje");
-  // Selecciona el target de la imagen de realidad aumentada por su atributo.
-  // Se asume que 'targetIndex: 0' es el primer target definido.
-  const arTargetElement = document.querySelector('[mindar-image-target="targetIndex: 0"]');
+  const arTargetElement = document.querySelector(
+    '[mindar-image-target="targetIndex: 0"]'
+  );
 
-  // --- Verificación de Elementos del DOM ---
-  // Asegura que todos los elementos necesarios existan antes de continuar.
+  // ================================
+  // COMPROBACIONES
+  // ================================
   if (!videoElement) {
-    console.error("Error: No se encontró el elemento de vídeo con ID 'video'.");
+    console.error("No se encontró #video.");
     if (messageElement) {
-      messageElement.innerHTML = "Error: Configuración de vídeo incorrecta.";
+      messageElement.textContent = "Error: no se encontró el vídeo.";
     }
-    // Detiene la ejecución si el elemento de vídeo es crucial.
-    throw new Error("Elemento de vídeo no encontrado.");
+    throw new Error("Elemento #video no encontrado.");
   }
-  if (!messageElement) {
-    console.warn("Advertencia: No se encontró el elemento de mensaje con ID 'mensaje'. Los mensajes al usuario no se mostrarán.");
-  }
+
   if (!arTargetElement) {
-    console.error("Error: No se encontró el target de AR con el selector '[mindar-image-target=\"targetIndex: 0\"]'.");
+    console.error("No se encontró el target de MindAR.");
     if (messageElement) {
-      messageElement.innerHTML = "Error: Configuración de AR incorrecta.";
+      messageElement.textContent = "Error: no se encontró el target AR.";
     }
-    // Detiene la ejecución si el target de AR es crucial.
-    throw new Error("Elemento target de AR no encontrado.");
+    throw new Error("Target AR no encontrado.");
   }
 
-  // --- Configuración Inicial del Vídeo ---
-  // Configura el vídeo para una experiencia de realidad aumentada fluida.
-  videoElement.muted = true; // Silencia el vídeo para evitar conflictos de audio.
-  videoElement.loop = true; // Repite el vídeo indefinidamente.
-  videoElement.playsInline = true; // Permite la reproducción en línea en dispositivos móviles.
+  // ================================
+  // CONFIGURACIÓN DEL VÍDEO
+  // ================================
+  videoElement.muted = true;
+  videoElement.loop = true;
+  videoElement.playsInline = true;
+  videoElement.setAttribute("playsinline", "");
+  videoElement.setAttribute("webkit-playsinline", "");
 
-  // --- Manejo de Errores del Vídeo ---
-  // Escucha el evento 'error' del elemento de vídeo para informar al usuario.
+  // ================================
+  // FUNCIÓN PARA REPRODUCIR
+  // ================================
+  async function reproducirVideo() {
+    try {
+      await videoElement.play();
+
+      if (messageElement) {
+        messageElement.textContent = "¡Vídeo reproduciéndose!";
+      }
+
+      console.log("Vídeo reproduciéndose correctamente.");
+
+    } catch (error) {
+      console.error("Error al reproducir el vídeo:", error);
+
+      if (messageElement) {
+        if (error.name === "NotAllowedError") {
+          messageElement.innerHTML =
+            "Toca la pantalla para reproducir el vídeo.";
+        } else {
+          messageElement.textContent =
+            "No se pudo reproducir el vídeo.";
+        }
+      }
+    }
+  }
+
+  // ================================
+  // ERROR DEL VÍDEO
+  // ================================
   videoElement.addEventListener("error", function () {
-    let errorMessage = "Error desconocido del vídeo.";
+    let mensaje = "Error desconocido del vídeo.";
+
     if (videoElement.error) {
-      // Proporciona un mensaje de error más detallado si está disponible.
       switch (videoElement.error.code) {
         case MediaError.MEDIA_ERR_ABORTED:
-          errorMessage = "Reproducción del vídeo abortada.";
+          mensaje = "La reproducción del vídeo fue cancelada.";
           break;
+
         case MediaError.MEDIA_ERR_NETWORK:
-          errorMessage = "Error de red al cargar el vídeo.";
+          mensaje = "Error de red al cargar el vídeo.";
           break;
+
         case MediaError.MEDIA_ERR_DECODE:
-          errorMessage = "Error al decodificar el vídeo.";
+          mensaje = "Error al decodificar el vídeo.";
           break;
+
         case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-          errorMessage = "Formato de vídeo no soportado.";
+          mensaje = "Formato de vídeo no compatible.";
           break;
+
         default:
-          errorMessage = `Error del vídeo (código: ${videoElement.error.code}).`;
+          mensaje =
+            `Error del vídeo (código ${videoElement.error.code}).`;
       }
-      console.error("Error del vídeo:", videoElement.error);
-    } else {
-      console.error("Error del vídeo: No se pudo determinar el código de error.");
     }
 
+    console.error("Error del vídeo:", videoElement.error);
+
     if (messageElement) {
-      messageElement.innerHTML = `ERROR DEL VÍDEO: ${errorMessage}`;
+      messageElement.textContent = mensaje;
     }
   });
 
-  // --- Evento 'canplay' del Vídeo ---
-  // Se dispara cuando el navegador puede comenzar a reproducir el vídeo.
+  // ================================
+  // VÍDEO LISTO
+  // ================================
   videoElement.addEventListener("canplay", function () {
-    console.log("El vídeo está listo para reproducirse.");
-    // Opcional: Mostrar un mensaje al usuario indicando que el vídeo está listo.
-    // if (messageElement) {
-    //   messageElement.innerHTML = "Vídeo listo.";
-    // }
+    console.log("Vídeo listo para reproducirse.");
   });
 
-  // --- Evento 'targetFound' del AR ---
-  // Se dispara cuando el patrón de realidad aumentada es detectado por la cámara.
-  arTargetElement.addEventListener("targetFound", async function () {
+  // ================================
+  // TARGET ENCONTRADO
+  // ================================
+  arTargetElement.addEventListener("targetFound", function () {
+    console.log("Target AR encontrado.");
+
     if (messageElement) {
-      messageElement.innerHTML = "¡Patrón reconocido! Preparando vídeo...";
+      messageElement.textContent = "¡Patrón reconocido!";
     }
-    console.log("Patrón AR encontrado.");
 
-    try {
-      // Intenta reproducir el vídeo. La reproducción automática puede fallar
-      // si no se ha interactuado previamente con la página.
-      await videoElement.play();
-      if (messageElement) {
-        messageElement.innerHTML = "¡Vídeo reproduciéndose!";
-      }
-      console.log("Vídeo reproduciéndose correctamente.");
-    } catch (error) {
-      // Captura y muestra errores de reproducción.
-      console.error("ERROR AL REPRODUCIR EL VÍDEO:", error);
-      let userErrorMessage = `Error al reproducir: ${error.name || 'Desconocido'}.`;
-      if (error.message) {
-        userErrorMessage += `<br>${error.message}`;
-      }
-      if (messageElement) {
-        messageElement.innerHTML = userErrorMessage;
-      }
-      // Si la reproducción automática falla, se puede sugerir al usuario que toque la pantalla.
-      if (error.name === "NotAllowedError" && messageElement) {
-        messageElement.innerHTML += "<br>Por favor, toque la pantalla para permitir la reproducción.";
-      }
-    }
+    reproducirVideo();
   });
 
-  // --- Evento 'targetLost' del AR ---
-  // Se dispara cuando el patrón de realidad aumentada deja de ser detectado.
+  // ================================
+  // TARGET PERDIDO
+  // ================================
   arTargetElement.addEventListener("targetLost", function () {
-    console.log("Patrón AR perdido.");
-    if (messageElement) {
-      messageElement.innerHTML = "Apunta la cámara hacia el patrón.";
-    }
-    // Pausa el vídeo cuando el patrón ya no está visible.
+    console.log("Target AR perdido.");
+
     videoElement.pause();
+
+    // Reinicia el vídeo para la próxima detección.
+    videoElement.currentTime = 0;
+
+    if (messageElement) {
+      messageElement.textContent =
+        "Apunta la cámara hacia el patrón.";
+    }
   });
 
+  // ================================
+  // PERMITIR REPRODUCCIÓN MEDIANTE TOQUE
+  // ================================
+  document.addEventListener(
+    "click",
+    function () {
+      if (videoElement.paused) {
+        reproducirVideo();
+      }
+    },
+    { once: true }
+  );
+
+  document.addEventListener(
+    "touchstart",
+    function () {
+      if (videoElement.paused) {
+        reproducirVideo();
+      }
+    },
+    { once: true }
+  );
+
+  console.log("Sistema AR + vídeo inicializado correctamente.");
 </script>
