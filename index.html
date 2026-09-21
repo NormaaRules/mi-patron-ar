@@ -1,124 +1,64 @@
-<!DOCTYPE html>
-<html lang="es">
+<script>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  const video = document.querySelector("#video");
+  const mensaje = document.querySelector("#mensaje");
 
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  const target = document.querySelector(
+    '[mindar-image-target="targetIndex: 0"]'
+  );
 
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
+  // Mostrar errores del vídeo
+  video.addEventListener("error", function () {
+    mensaje.innerHTML =
+      "ERROR DEL VÍDEO: " +
+      (video.error ? video.error.message : "Error desconocido");
+
+    console.log("Error del vídeo:", video.error);
+  });
+
+  // Cuando el vídeo esté listo
+  video.addEventListener("canplay", function () {
+    console.log("Vídeo listo para reproducirse");
+  });
+
+  // Cuando encuentra el patrón
+  target.addEventListener("targetFound", async function () {
+
+    mensaje.innerHTML = "¡Patrón reconocido!";
+
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+
+    try {
+
+      await video.play();
+
+      mensaje.innerHTML = "¡Vídeo reproduciéndose!";
+
+      console.log("Vídeo reproduciéndose correctamente");
+
+    } catch (error) {
+
+      console.error("ERROR AL REPRODUCIR:", error);
+
+      mensaje.innerHTML =
+        "ERROR AL REPRODUCIR:<br>" +
+        error.name +
+        "<br>" +
+        error.message;
+
     }
 
-    #mensaje {
-      position: fixed;
-      z-index: 10;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,0.75);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 10px;
-      font-family: Arial, sans-serif;
-      text-align: center;
-    }
-  </style>
-</head>
+  });
 
-<body>
+  // Cuando pierde el patrón
+  target.addEventListener("targetLost", function () {
 
-  <div id="mensaje">
-    Apunta la cámara hacia el patrón
-  </div>
+    mensaje.innerHTML = "Apunta la cámara hacia el patrón";
 
-  <a-scene
-    mindar-image="
-      imageTargetSrc: ./targets.mind;
-      autoStart: true;
-      uiScanning: yes;
-      uiLoading: yes;
-    "
-    color-space="sRGB"
-    renderer="colorManagement: true"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false">
+    video.pause();
 
-    <a-assets>
+  });
 
-      <video
-        id="video"
-        src="./video.MP4"
-        preload="auto"
-        autoplay
-        loop
-        muted
-        playsinline
-        webkit-playsinline
-        crossorigin="anonymous">
-      </video>
-
-    </a-assets>
-
-    <a-camera
-      position="0 0 0"
-      look-controls="enabled: false">
-    </a-camera>
-
-    <a-entity mindar-image-target="targetIndex: 0">
-
-      <a-video
-        src="#video"
-        position="0 0 0"
-        width="1"
-        height="0.5625"
-        material="shader: flat;">
-      </a-video>
-
-    </a-entity>
-
-  </a-scene>
-
-  <script>
-
-    const video = document.querySelector("#video");
-    const mensaje = document.querySelector("#mensaje");
-    const target = document.querySelector(
-      '[mindar-image-target="targetIndex: 0"]'
-    );
-
-    // Cargar el vídeo
-    video.load();
-
-    target.addEventListener("targetFound", async function () {
-
-      mensaje.innerHTML = "¡Patrón reconocido!";
-
-      video.muted = true;
-      video.loop = true;
-
-      try {
-        await video.play();
-        console.log("Vídeo reproduciéndose");
-      } catch (error) {
-        console.log("Error al reproducir:", error);
-      }
-
-    });
-
-    target.addEventListener("targetLost", function () {
-
-      mensaje.innerHTML = "Apunta la cámara hacia el patrón";
-
-      video.pause();
-
-    });
-
-  </script>
-
-</body>
-</html>
+</script>
