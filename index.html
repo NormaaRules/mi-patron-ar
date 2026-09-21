@@ -1,117 +1,120 @@
 <!DOCTYPE html>
+
 <html lang="es">
 
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 
-  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
 
     body {
+
       margin: 0;
+
       overflow: hidden;
-      background: black;
+
     }
 
     #mensaje {
+
       position: fixed;
+
       z-index: 10;
+
       top: 20px;
+
       left: 50%;
+
       transform: translateX(-50%);
 
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0,0,0,0.75);
+
       color: white;
 
       padding: 12px 20px;
+
       border-radius: 10px;
 
       font-family: Arial, sans-serif;
-      font-size: 16px;
 
       text-align: center;
+
     }
 
   </style>
 
 </head>
 
-
 <body>
 
-  <!-- Mensaje -->
   <div id="mensaje">
+
     Apunta la cámara hacia el patrón
+
   </div>
 
-
-  <!-- Escena AR -->
-
   <a-scene
+
     mindar-image="
+
       imageTargetSrc: ./targets.mind;
+
       autoStart: true;
+
       uiScanning: yes;
+
       uiLoading: yes;
+
     "
 
     color-space="sRGB"
 
-    renderer="
-      colorManagement: true;
-      physicallyCorrectLights: true;
-    "
+    renderer="colorManagement: true"
 
     vr-mode-ui="enabled: false"
 
-    device-orientation-permission-ui="enabled: false"
-  >
-
-
-    <!-- VIDEO -->
+    device-orientation-permission-ui="enabled: false">
 
     <a-assets>
 
       <video
+
         id="video"
+
         src="./video.mp4"
+
         preload="auto"
-        autoplay
-        muted
+
         loop
+
+        muted
+
         playsinline
-        webkit-playsinline
-        crossorigin="anonymous">
+
+        webkit-playsinline>
+
       </video>
 
     </a-assets>
 
-
-    <!-- Cámara -->
-
     <a-camera
+
       position="0 0 0"
+
       look-controls="enabled: false">
+
     </a-camera>
 
-
-    <!-- Imagen reconocida -->
-
-    <a-entity
-      mindar-image-target="targetIndex: 0"
-    >
-
-
-      <!-- Vídeo sobre la imagen -->
+    <a-entity mindar-image-target="targetIndex: 0">
 
       <a-video
-        id="videoAR"
 
         src="#video"
 
@@ -119,20 +122,13 @@
 
         width="1"
 
-        height="0.5625"
+        height="0.5625">
 
-        rotation="0 0 0"
-      >
       </a-video>
-
 
     </a-entity>
 
-
   </a-scene>
-
-
-  <!-- SCRIPT -->
 
   <script>
 
@@ -141,64 +137,36 @@
     const mensaje = document.querySelector("#mensaje");
 
     const target = document.querySelector(
+
       '[mindar-image-target="targetIndex: 0"]'
+
     );
 
-
-    /*
-     * CUANDO SE RECONOCE EL PATRÓN
-     */
-
-    target.addEventListener("targetFound", () => {
-
-      console.log("Patrón reconocido");
+    target.addEventListener("targetFound", function () {
 
       mensaje.innerHTML = "¡Patrón reconocido!";
 
-      // Autoplay permitido en iPhone/iPad
       video.muted = true;
 
-      // Repetir continuamente
       video.loop = true;
 
-      // Comenzar desde el principio
       video.currentTime = 0;
 
-      // Reproducir automáticamente
-      video.play()
-        .then(() => {
+      video.play().catch(function(error) {
 
-          console.log("Vídeo reproduciéndose");
+        console.log("Error al reproducir:", error);
 
-        })
-        .catch((error) => {
-
-          console.log(
-            "El navegador bloqueó el autoplay:",
-            error
-          );
-
-        });
+      });
 
     });
 
+    target.addEventListener("targetLost", function () {
 
-    /*
-     * CUANDO SE PIERDE EL PATRÓN
-     */
+      mensaje.innerHTML = "Apunta la cámara hacia el patrón";
 
-    target.addEventListener("targetLost", () => {
-
-      console.log("Patrón perdido");
-
-      mensaje.innerHTML =
-        "Apunta la cámara hacia el patrón";
-
-      // Pausar vídeo
       video.pause();
 
     });
-
 
   </script>
 
