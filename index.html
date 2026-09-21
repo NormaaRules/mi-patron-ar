@@ -1,16 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+  <!-- MindAR -->
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
+
     body {
       margin: 0;
       overflow: hidden;
+      background: black;
     }
 
     #mensaje {
@@ -19,126 +25,183 @@
       top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0,0,0,0.75);
+
+      background: rgba(0, 0, 0, 0.75);
       color: white;
+
       padding: 12px 20px;
       border-radius: 10px;
-      font-family: Arial;
+
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+
       text-align: center;
     }
 
-    #boton {
-      display: none;
-      position: fixed;
-      z-index: 20;
-      bottom: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 15px 30px;
-      font-size: 18px;
-      border: none;
-      border-radius: 10px;
-      background: white;
-    }
   </style>
+
 </head>
+
 
 <body>
 
-<div id="mensaje">
-  Apunta la cámara hacia el patrón
-</div>
+  <!-- Mensaje -->
+  <div id="mensaje">
+    Apunta la cámara hacia el patrón
+  </div>
 
-<button id="boton">▶ REPRODUCIR VÍDEO</button>
 
-<a-scene
-  mindar-image="
-    imageTargetSrc: ./targets.mind;
-    autoStart: true;
-    uiScanning: yes;
-    uiLoading: yes;
-  "
-  color-space="sRGB"
-  renderer="colorManagement: true"
-  vr-mode-ui="enabled: false"
-  device-orientation-permission-ui="enabled: false">
+  <!-- Escena AR -->
 
-  <a-assets>
-    <video
-      id="video"
-      src="./video.mp4"
-      preload="auto"
-      loop
-      crossorigin="anonymous"
-      playsinline>
-    </video>
-  </a-assets>
+  <a-scene
+    mindar-image="
+      imageTargetSrc: ./targets.mind;
+      autoStart: true;
+      uiScanning: yes;
+      uiLoading: yes;
+    "
 
-  <a-camera
-    position="0 0 0"
-    look-controls="enabled: false">
-  </a-camera>
+    color-space="sRGB"
 
-  <a-entity mindar-image-target="targetIndex: 0">
+    renderer="
+      colorManagement: true;
+      physicallyCorrectLights: true;
+    "
 
-    <a-video
-      id="videoAR"
-      src="#video"
+    vr-mode-ui="enabled: false"
+
+    device-orientation-permission-ui="enabled: false"
+  >
+
+
+    <!-- VIDEO -->
+
+    <a-assets>
+
+      <video
+        id="video"
+        src="./video.mp4"
+        preload="auto"
+        autoplay
+        muted
+        loop
+        playsinline
+        webkit-playsinline
+        crossorigin="anonymous">
+      </video>
+
+    </a-assets>
+
+
+    <!-- Cámara -->
+
+    <a-camera
       position="0 0 0"
-      width="1"
-      height="0.5625"
-      rotation="0 0 0">
-    </a-video>
+      look-controls="enabled: false">
+    </a-camera>
 
-  </a-entity>
 
-</a-scene>
+    <!-- Imagen reconocida -->
 
-<script>
+    <a-entity
+      mindar-image-target="targetIndex: 0"
+    >
 
-const video = document.querySelector("#video");
-const boton = document.querySelector("#boton");
-const mensaje = document.querySelector("#mensaje");
 
-const target = document.querySelector(
-  '[mindar-image-target="targetIndex: 0"]'
-);
+      <!-- Vídeo sobre la imagen -->
 
-target.addEventListener("targetFound", () => {
+      <a-video
+        id="videoAR"
 
-  mensaje.innerHTML = "¡Patrón reconocido!";
+        src="#video"
 
-  boton.style.display = "block";
+        position="0 0 0"
 
-  video.muted = true;
+        width="1"
 
-  video.play().catch(() => {
-    console.log("El navegador requiere pulsar el botón.");
-  });
+        height="0.5625"
 
-});
+        rotation="0 0 0"
+      >
+      </a-video>
 
-target.addEventListener("targetLost", () => {
 
-  mensaje.innerHTML = "Apunta la cámara hacia el patrón";
+    </a-entity>
 
-  boton.style.display = "none";
 
-  video.pause();
+  </a-scene>
 
-});
 
-boton.addEventListener("click", () => {
+  <!-- SCRIPT -->
 
-  video.muted = false;
+  <script>
 
-  video.play();
+    const video = document.querySelector("#video");
 
-  boton.style.display = "none";
+    const mensaje = document.querySelector("#mensaje");
 
-});
+    const target = document.querySelector(
+      '[mindar-image-target="targetIndex: 0"]'
+    );
 
-</script>
+
+    /*
+     * CUANDO SE RECONOCE EL PATRÓN
+     */
+
+    target.addEventListener("targetFound", () => {
+
+      console.log("Patrón reconocido");
+
+      mensaje.innerHTML = "¡Patrón reconocido!";
+
+      // Autoplay permitido en iPhone/iPad
+      video.muted = true;
+
+      // Repetir continuamente
+      video.loop = true;
+
+      // Comenzar desde el principio
+      video.currentTime = 0;
+
+      // Reproducir automáticamente
+      video.play()
+        .then(() => {
+
+          console.log("Vídeo reproduciéndose");
+
+        })
+        .catch((error) => {
+
+          console.log(
+            "El navegador bloqueó el autoplay:",
+            error
+          );
+
+        });
+
+    });
+
+
+    /*
+     * CUANDO SE PIERDE EL PATRÓN
+     */
+
+    target.addEventListener("targetLost", () => {
+
+      console.log("Patrón perdido");
+
+      mensaje.innerHTML =
+        "Apunta la cámara hacia el patrón";
+
+      // Pausar vídeo
+      video.pause();
+
+    });
+
+
+  </script>
 
 </body>
+
 </html>
