@@ -1,165 +1,258 @@
 <script>
-  // ================================
-  // ELEMENTOS
-  // ================================
+  // ============================================
+  // ELEMENTOS DEL DOM
+  // ============================================
+
   const videoElement = document.querySelector("#video");
   const messageElement = document.querySelector("#mensaje");
+
   const arTargetElement = document.querySelector(
     '[mindar-image-target="targetIndex: 0"]'
   );
 
-  // ================================
+
+  // ============================================
   // COMPROBACIONES
-  // ================================
+  // ============================================
+
   if (!videoElement) {
-    console.error("No se encontró #video.");
+    console.error("Error: no se encontró #video.");
+
     if (messageElement) {
-      messageElement.textContent = "Error: no se encontró el vídeo.";
+      messageElement.textContent =
+        "Error: no se encontró el elemento de vídeo.";
     }
-    throw new Error("Elemento #video no encontrado.");
+
+    // No detenemos MindAR.
   }
 
   if (!arTargetElement) {
-    console.error("No se encontró el target de MindAR.");
+    console.error(
+      'Error: no se encontró [mindar-image-target="targetIndex: 0"].'
+    );
+
     if (messageElement) {
-      messageElement.textContent = "Error: no se encontró el target AR.";
+      messageElement.textContent =
+        "Error: no se encontró el target de AR.";
     }
-    throw new Error("Target AR no encontrado.");
+
+    // No detenemos MindAR.
   }
 
-  // ================================
+
+  // ============================================
   // CONFIGURACIÓN DEL VÍDEO
-  // ================================
-  videoElement.muted = true;
-  videoElement.loop = true;
-  videoElement.playsInline = true;
-  videoElement.setAttribute("playsinline", "");
-  videoElement.setAttribute("webkit-playsinline", "");
+  // ============================================
 
-  // ================================
-  // FUNCIÓN PARA REPRODUCIR
-  // ================================
-  async function reproducirVideo() {
-    try {
-      await videoElement.play();
+  if (videoElement) {
+    videoElement.muted = true;
+    videoElement.loop = true;
+    videoElement.playsInline = true;
 
-      if (messageElement) {
-        messageElement.textContent = "¡Vídeo reproduciéndose!";
+    videoElement.setAttribute("muted", "");
+    videoElement.setAttribute("playsinline", "");
+    videoElement.setAttribute("webkit-playsinline", "");
+  }
+
+
+  // ============================================
+  // ERROR DEL VÍDEO
+  // ============================================
+
+  if (videoElement) {
+    videoElement.addEventListener("error", function () {
+
+      let errorMessage = "Error desconocido del vídeo.";
+
+      if (videoElement.error) {
+
+        switch (videoElement.error.code) {
+
+          case MediaError.MEDIA_ERR_ABORTED:
+            errorMessage =
+              "Reproducción del vídeo abortada.";
+            break;
+
+          case MediaError.MEDIA_ERR_NETWORK:
+            errorMessage =
+              "Error de red al cargar el vídeo.";
+            break;
+
+          case MediaError.MEDIA_ERR_DECODE:
+            errorMessage =
+              "Error al decodificar el vídeo.";
+            break;
+
+          case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            errorMessage =
+              "Formato de vídeo no compatible.";
+            break;
+
+          default:
+            errorMessage =
+              `Error del vídeo (código: ${videoElement.error.code}).`;
+        }
+
+        console.error(
+          "Error del vídeo:",
+          videoElement.error
+        );
+
+      } else {
+        console.error(
+          "Error del vídeo: código desconocido."
+        );
       }
 
-      console.log("Vídeo reproduciéndose correctamente.");
+      if (messageElement) {
+        messageElement.textContent =
+          "ERROR DEL VÍDEO: " + errorMessage;
+      }
+    });
+  }
 
-    } catch (error) {
-      console.error("Error al reproducir el vídeo:", error);
+
+  // ============================================
+  // VÍDEO LISTO
+  // ============================================
+
+  if (videoElement) {
+    videoElement.addEventListener("canplay", function () {
+      console.log("El vídeo está listo para reproducirse.");
+    });
+  }
+
+
+  // ============================================
+  // FUNCIÓN PARA REPRODUCIR EL VÍDEO
+  // ============================================
+
+  async function reproducirVideo() {
+
+    if (!videoElement) {
+      return;
+    }
+
+    try {
+
+      await videoElement.play();
+
+      console.log(
+        "Vídeo reproduciéndose correctamente."
+      );
 
       if (messageElement) {
+        messageElement.textContent =
+          "¡Vídeo reproduciéndose!";
+      }
+
+    } catch (error) {
+
+      console.error(
+        "ERROR AL REPRODUCIR EL VÍDEO:",
+        error
+      );
+
+      if (messageElement) {
+
         if (error.name === "NotAllowedError") {
-          messageElement.innerHTML =
-            "Toca la pantalla para reproducir el vídeo.";
-        } else {
+
           messageElement.textContent =
-            "No se pudo reproducir el vídeo.";
+            "Toca la pantalla para reproducir el vídeo.";
+
+        } else {
+
+          messageElement.textContent =
+            "Error al reproducir el vídeo.";
         }
       }
     }
   }
 
-  // ================================
-  // ERROR DEL VÍDEO
-  // ================================
-  videoElement.addEventListener("error", function () {
-    let mensaje = "Error desconocido del vídeo.";
 
-    if (videoElement.error) {
-      switch (videoElement.error.code) {
-        case MediaError.MEDIA_ERR_ABORTED:
-          mensaje = "La reproducción del vídeo fue cancelada.";
-          break;
-
-        case MediaError.MEDIA_ERR_NETWORK:
-          mensaje = "Error de red al cargar el vídeo.";
-          break;
-
-        case MediaError.MEDIA_ERR_DECODE:
-          mensaje = "Error al decodificar el vídeo.";
-          break;
-
-        case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
-          mensaje = "Formato de vídeo no compatible.";
-          break;
-
-        default:
-          mensaje =
-            `Error del vídeo (código ${videoElement.error.code}).`;
-      }
-    }
-
-    console.error("Error del vídeo:", videoElement.error);
-
-    if (messageElement) {
-      messageElement.textContent = mensaje;
-    }
-  });
-
-  // ================================
-  // VÍDEO LISTO
-  // ================================
-  videoElement.addEventListener("canplay", function () {
-    console.log("Vídeo listo para reproducirse.");
-  });
-
-  // ================================
+  // ============================================
   // TARGET ENCONTRADO
-  // ================================
-  arTargetElement.addEventListener("targetFound", function () {
-    console.log("Target AR encontrado.");
+  // ============================================
 
-    if (messageElement) {
-      messageElement.textContent = "¡Patrón reconocido!";
-    }
+  if (arTargetElement) {
 
-    reproducirVideo();
-  });
+    arTargetElement.addEventListener(
+      "targetFound",
+      function () {
 
-  // ================================
-  // TARGET PERDIDO
-  // ================================
-  arTargetElement.addEventListener("targetLost", function () {
-    console.log("Target AR perdido.");
+        console.log("TARGET AR ENCONTRADO.");
 
-    videoElement.pause();
+        if (messageElement) {
+          messageElement.textContent =
+            "¡Patrón reconocido! Preparando vídeo...";
+        }
 
-    // Reinicia el vídeo para la próxima detección.
-    videoElement.currentTime = 0;
-
-    if (messageElement) {
-      messageElement.textContent =
-        "Apunta la cámara hacia el patrón.";
-    }
-  });
-
-  // ================================
-  // PERMITIR REPRODUCCIÓN MEDIANTE TOQUE
-  // ================================
-  document.addEventListener(
-    "click",
-    function () {
-      if (videoElement.paused) {
         reproducirVideo();
       }
-    },
+    );
+
+
+    // ============================================
+    // TARGET PERDIDO
+    // ============================================
+
+    arTargetElement.addEventListener(
+      "targetLost",
+      function () {
+
+        console.log("TARGET AR PERDIDO.");
+
+        if (videoElement) {
+
+          videoElement.pause();
+
+          // Volver al principio para la próxima detección.
+          videoElement.currentTime = 0;
+        }
+
+        if (messageElement) {
+          messageElement.textContent =
+            "Apunta la cámara hacia el patrón.";
+        }
+      }
+    );
+  }
+
+
+  // ============================================
+  // PERMITIR REPRODUCCIÓN CON TOQUE
+  // ============================================
+
+  function permitirReproduccion() {
+
+    if (!videoElement) {
+      return;
+    }
+
+    if (videoElement.paused) {
+      reproducirVideo();
+    }
+  }
+
+  document.addEventListener(
+    "click",
+    permitirReproduccion,
     { once: true }
   );
 
   document.addEventListener(
     "touchstart",
-    function () {
-      if (videoElement.paused) {
-        reproducirVideo();
-      }
-    },
+    permitirReproduccion,
     { once: true }
   );
 
-  console.log("Sistema AR + vídeo inicializado correctamente.");
+
+  // ============================================
+  // FIN
+  // ============================================
+
+  console.log(
+    "Script de control AR + vídeo cargado correctamente."
+  );
+
 </script>
